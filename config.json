@@ -1,5 +1,6 @@
 {
             "openai_api_key": null,
+            "googleai_api_key": null,
             "debug_mode": false,
             "allow_downloads": false,
             "selenium_web_browser": "chrome",

@@ -142,11 +142,21 @@ export OPENAI_API_KEY={Your OpenAI API Key here}
 export TAVILY_API_KEY={Your Tavily API Key here}
 ```
 
+To use Gemini use
+```bash
+export GOOGLE_API_KEY={Your GoogleAI API Key here}
+```
+
 For a more permanent setup, create a `.env` file in the current `gpt-researcher` folder and input the keys as follows:
 
 ```bash
 OPENAI_API_KEY={Your OpenAI API Key here}
 TAVILY_API_KEY={Your Tavily API Key here}
+```
+
+To use Gemini use
+```bash
+GOOGLE_API_KEY={Your GoogleAI API Key here}
 ```
 
 - **For LLM, we recommend [OpenAI GPT](https://platform.openai.com/docs/guides/gpt)**, but you can use any other LLM model (including open sources) supported by [Langchain Adapter](https://python.langchain.com/docs/guides/adapters/openai), simply change the llm model and provider in config/config.py. Follow [this guide](https://python.langchain.com/docs/integrations/llms/) to learn how to integrate LLMs with Langchain. 

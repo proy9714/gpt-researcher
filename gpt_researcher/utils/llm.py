@@ -51,8 +51,12 @@ async def create_chat_completion(
         
         return response
 
-    logging.error("Failed to get response from OpenAI API")
-    raise RuntimeError("Failed to get response from OpenAI API")
+    if llm_provider=="google":
+        logging.error("Failed to get response from Gemini API")
+        raise RuntimeError("Failed to get response from Gemini API")
+    else:
+        logging.error("Failed to get response from OpenAI API")
+        raise RuntimeError("Failed to get response from OpenAI API")
 
 
 import logging
