@@ -5,7 +5,8 @@ from fastapi import WebSocket
 from langchain.adapters import openai as lc_openai
 from colorama import Fore, Style
 from typing import Optional
-
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.messages import HumanMessage, SystemMessage
 from gpt_researcher.master.prompts import auto_agent_instructions
 
 
@@ -39,9 +40,15 @@ async def create_chat_completion(
 
     # create response
     for attempt in range(10):  # maximum of 10 attempts
-        response = await send_chat_completion_request(
-            messages, model, temperature, max_tokens, stream, llm_provider, websocket
-        )
+        if llm_provider=="google":
+            response = await send_google_chat_completion_request(
+                messages, model, temperature, max_tokens, stream, llm_provider, websocket
+            )
+        else:
+            response = await send_oepnai_chat_completion_request(
+                messages, model, temperature, max_tokens, stream, llm_provider, websocket
+            )
+        
         return response
 
     logging.error("Failed to get response from OpenAI API")
@@ -50,8 +57,42 @@ async def create_chat_completion(
 
 import logging
 
+def convert_messages(messages):
+    """
+    The function `convert_messages` converts messages based on their role into either SystemMessage or
+    HumanMessage objects.
+    
+    :param messages: It seems like the code snippet you provided is a function called `convert_messages`
+    that takes a list of messages as input and converts each message based on its role into either a
+    `SystemMessage` or a `HumanMessage`. However, the definition of `SystemMessage` and `HumanMessage`
+    classes
+    :return: The `convert_messages` function is returning a list of converted messages where each
+    message is an instance of either `SystemMessage` or `HumanMessage` based on the role specified in
+    the input messages.
+    """
+    converted_messages = []
+    for message in messages:
+        if message["role"] == "system":
+            converted_messages.append(SystemMessage(content=message["content"]))
+        elif message["role"] == "user":
+            converted_messages.append(HumanMessage(content=message["content"]))
+            
+    return converted_messages
 
-async def send_chat_completion_request(
+async def send_google_chat_completion_request(
+        messages, model, temperature, max_tokens, stream, llm_provider, websocket
+):
+    if not stream:
+        llm = ChatGoogleGenerativeAI(model=model, convert_system_message_to_human=True, temperature=temperature, max_output_tokens=max_tokens)
+        converted_messages = convert_messages(messages)
+        result = llm.invoke(converted_messages)
+        
+        return result.content
+    else:
+        return await stream_response(model, messages, temperature, max_tokens, llm_provider, websocket)
+    
+
+async def send_oepnai_chat_completion_request(
         messages, model, temperature, max_tokens, stream, llm_provider, websocket
 ):
     if not stream:
@@ -68,27 +109,45 @@ async def send_chat_completion_request(
 
 
 async def stream_response(model, messages, temperature, max_tokens, llm_provider, websocket=None):
+    async def send_output(output):
+        if websocket is not None:
+            await websocket.send_json({"type": "report", "output": output})
+        else:
+            print(f"{Fore.GREEN}{output}{Style.RESET_ALL}")
+
+    async def stream_chunks(llm, messages):
+        async for chunk in llm.stream(convert_messages(messages)):
+            yield chunk
+
     paragraph = ""
     response = ""
 
-    for chunk in lc_openai.ChatCompletion.create(
+    if llm_provider == "google":
+        llm = ChatGoogleGenerativeAI(
+            model=model, 
+            convert_system_message_to_human=True, 
+            temperature=temperature, 
+            max_output_tokens=max_tokens
+        )
+    else:
+        llm = lc_openai.ChatCompletion.create(
             model=model,
             messages=messages,
             temperature=temperature,
             max_tokens=max_tokens,
             provider=llm_provider,
             stream=True,
-    ):
-        content = chunk["choices"][0].get("delta", {}).get("content")
+        )
+
+    async for chunk in stream_chunks(llm, messages):
+        content = chunk if llm_provider == "google" else chunk["choices"][0].get("delta", {}).get("content")
         if content is not None:
             response += content
             paragraph += content
             if "\n" in paragraph:
-                if websocket is not None:
-                    await websocket.send_json({"type": "report", "output": paragraph})
-                else:
-                    print(f"{Fore.GREEN}{paragraph}{Style.RESET_ALL}")
+                await send_output(paragraph)
                 paragraph = ""
+
     return response
 
 
