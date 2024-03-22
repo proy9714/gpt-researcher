@@ -35,6 +35,10 @@
         .btn-show {
             display: none;
         }
+
+        .list-group{
+            color: #495057;
+        }
     </style>
 </head>
 
@@ -72,6 +76,26 @@
 
             </div>
             <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
+        </div>
+        <div class="form-group">
+            <label for="control_type" class="agent-question">Select Source Type:</label>
+            <div>
+                <input type="radio" id="externalControl" name="control_type" value="external" checked>
+                <label for="externalControl">External</label>
+            </div>
+            <div>
+                <input type="radio" id="documentControl" name="control_type" value="document">
+                <label for="documentControl">Documents</label>
+            </div>
+        </div>
+        <div id="documentControlSection" style="display: none;">
+            <div class="form-group">
+                <label for="documentSelector" class="agent-question">Select User Documents:</label>
+                <input type="file" id="documentSelector" name="documents[]" multiple accept=".doc, .docx, .pdf">
+            </div>
+            <div id="selectedDocumentsList" class="mt-3">
+                <ul id="selectedDocumentsUl" class="list-group"></ul>
+            </div>
         </div>
         <div class="form-group">
             <label for="report_type" class="agent-question">What type of report would you like me to generate?</label>
@@ -129,6 +153,53 @@
         btnChoose.style.display = 'inline-block';
         autoAgentDiv.style.display = 'flex';
         agentChoices[0].style.display = 'none';
+    });
+
+    // Function to handle changes in the document control radio button
+    document.getElementById('documentControl').addEventListener('change', function () {
+        if (this.checked) {
+            document.getElementById('documentControlSection').style.display = 'block'; // Show document selection section
+            documentSelector.required = true; // Set the file input as required
+        } else {
+            document.getElementById('documentControlSection').style.display = 'none'; // Hide document selection section
+            documentSelector.required = false; // Set the file input as not required
+        }
+    });
+
+    // Function to handle changes in the external control radio button
+    document.getElementById('externalControl').addEventListener('change', function () {
+        if (this.checked) {
+            document.getElementById('documentControlSection').style.display = 'none'; // Show document selection section
+            documentSelector.required = false; // Set the file input as not required
+        } else {
+            document.getElementById('documentControlSection').style.display = 'block'; // Hide document selection section
+            documentSelector.required = true; // Set the file input as required
+        }
+    });
+
+    // Function to handle file selection in the document control
+    document.getElementById('documentSelector').addEventListener('change', function () {
+        const selectedFiles = this.files; // Get the selected files
+        const selectedDocumentsUl = document.getElementById('selectedDocumentsUl');
+        selectedDocumentsUl.innerHTML = ''; // Clear the list of selected documents
+
+        for (let i = 0; i < selectedFiles.length; i++) {
+            const li = document.createElement('li');
+            li.classList.add('list-group-item');
+
+            const fileNameSpan = document.createElement('span');
+            fileNameSpan.textContent = selectedFiles[i].name; // Display the file name in a span
+            li.appendChild(fileNameSpan);
+
+            selectedDocumentsUl.appendChild(li); // Add the list item to the list
+        }
+
+        const selectedDocumentsButtons = document.getElementById('selectedDocumentsButtons');
+        if (selectedFiles.length > 0) {
+            selectedDocumentsButtons.style.display = 'block'; // Show delete button if documents are selected
+        } else {
+            selectedDocumentsButtons.style.display = 'none'; // Hide delete button if no documents are selected
+        }
     });
 </script>
 </body>
