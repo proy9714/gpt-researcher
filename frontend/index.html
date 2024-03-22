@@ -78,13 +78,13 @@
             <button type="button" id="btnShowAuto" class="btn btn-secondary mt-3 btn-show">Auto Agent</button>
         </div>
         <div class="form-group">
-            <label for="control_type" class="agent-question">Select Source Type:</label>
+            <label for="research_source" class="agent-question">Select Source Type:</label>
             <div>
-                <input type="radio" id="externalControl" name="control_type" value="external" checked>
+                <input type="radio" id="externalControl" name="research_source" value="external" checked>
                 <label for="externalControl">External</label>
             </div>
             <div>
-                <input type="radio" id="documentControl" name="control_type" value="document">
+                <input type="radio" id="documentControl" name="research_source" value="document">
                 <label for="documentControl">Documents</label>
             </div>
         </div>
@@ -155,52 +155,46 @@
         agentChoices[0].style.display = 'none';
     });
 
-    // Function to handle changes in the document control radio button
-    document.getElementById('documentControl').addEventListener('change', function () {
-        if (this.checked) {
-            document.getElementById('documentControlSection').style.display = 'block'; // Show document selection section
-            documentSelector.required = true; // Set the file input as required
-        } else {
-            document.getElementById('documentControlSection').style.display = 'none'; // Hide document selection section
-            documentSelector.required = false; // Set the file input as not required
-        }
-    });
+    const documentControl = document.getElementById('documentControl');
+    const externalControl = document.getElementById('externalControl');
+    const documentControlSection = document.getElementById('documentControlSection');
+    const documentSelector = document.getElementById('documentSelector');
 
-    // Function to handle changes in the external control radio button
-    document.getElementById('externalControl').addEventListener('change', function () {
-        if (this.checked) {
-            document.getElementById('documentControlSection').style.display = 'none'; // Show document selection section
-            documentSelector.required = false; // Set the file input as not required
-        } else {
-            document.getElementById('documentControlSection').style.display = 'block'; // Hide document selection section
-            documentSelector.required = true; // Set the file input as required
-        }
-    });
+    const handleDocumentControlChange = () => {
+        const isDocumentControlChecked = documentControl.checked;
+        documentControlSection.style.display = isDocumentControlChecked ? 'block' : 'none';
+        documentSelector.required = isDocumentControlChecked;
+    };
 
-    // Function to handle file selection in the document control
-    document.getElementById('documentSelector').addEventListener('change', function () {
-        const selectedFiles = this.files; // Get the selected files
-        const selectedDocumentsUl = document.getElementById('selectedDocumentsUl');
-        selectedDocumentsUl.innerHTML = ''; // Clear the list of selected documents
+    const handleExternalControlChange = () => {
+        const isExternalControlChecked = externalControl.checked;
+        documentControlSection.style.display = isExternalControlChecked ? 'none' : 'block';
+        documentSelector.required = !isExternalControlChecked;
+    };
 
-        for (let i = 0; i < selectedFiles.length; i++) {
+    documentControl.addEventListener('change', handleDocumentControlChange);
+    externalControl.addEventListener('change', handleExternalControlChange);
+
+    const selectedDocumentsUl = document.getElementById('selectedDocumentsUl');
+    const selectedDocumentsButtons = document.getElementById('selectedDocumentsButtons');
+
+    const handleFileSelection = () => {
+        const selectedFiles = documentSelector.files;
+        selectedDocumentsUl.innerHTML = '';
+
+        Array.from(selectedFiles).forEach(file => {
             const li = document.createElement('li');
             li.classList.add('list-group-item');
-
             const fileNameSpan = document.createElement('span');
-            fileNameSpan.textContent = selectedFiles[i].name; // Display the file name in a span
+            fileNameSpan.textContent = file.name;
             li.appendChild(fileNameSpan);
+            selectedDocumentsUl.appendChild(li);
+        });
 
-            selectedDocumentsUl.appendChild(li); // Add the list item to the list
-        }
+        selectedDocumentsButtons.style.display = selectedFiles.length > 0 ? 'block' : 'none';
+    };
 
-        const selectedDocumentsButtons = document.getElementById('selectedDocumentsButtons');
-        if (selectedFiles.length > 0) {
-            selectedDocumentsButtons.style.display = 'block'; // Show delete button if documents are selected
-        } else {
-            selectedDocumentsButtons.style.display = 'none'; // Hide delete button if no documents are selected
-        }
-    });
+    documentSelector.addEventListener('change', handleFileSelection);
 </script>
 </body>
 

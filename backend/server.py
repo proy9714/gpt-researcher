@@ -46,6 +46,12 @@ async def websocket_endpoint(websocket: WebSocket):
                 json_data = json.loads(data[6:])
                 task = json_data.get("task")
                 report_type = json_data.get("report_type")
+                research_source = json_data.get("research_source")
+                documents = json_data.get("documents")
+                
+                print("research_source : ", research_source)
+                print("documents : ", documents)
+                
                 if task and report_type:
                     report = await manager.start_streaming(task, report_type, websocket)
                     # Saving report as pdf

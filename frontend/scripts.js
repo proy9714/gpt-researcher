@@ -39,15 +39,30 @@ const GPTResearcher = (() => {
         const task = document.querySelector('input[name="task"]').value;
         const report_type = document.querySelector('select[name="report_type"]').value;
         const agent = document.querySelector('input[name="agent"]:checked').value;
-  
+        const research_source = document.querySelector('input[name="research_source"]:checked').value; // Get the selected source type
+        let documents;
+
+        if (research_source === 'document') {
+          const selectedFiles = document.getElementById('documentSelector').files;
+          if (selectedFiles.length > 0) {
+            documents = Array.from(selectedFiles).map(file => file.name);
+          } else {
+            documents = ''; // Send an empty string if no documents are selected
+          }
+        } else {
+          documents = ''; // Send an empty string for external research source
+        }
+    
         const requestData = {
-          task: task,
-          report_type: report_type,
-          agent: agent,
+            task: task,
+            report_type: report_type,
+            agent: agent,
+            research_source: research_source, // Include the selected source type
+            documents: documents, // Include the path of selected documents
         };
-  
+    
         socket.send(`start ${JSON.stringify(requestData)}`);
-      };
+    };
     };
   
     const addAgentResponse = (data) => {
